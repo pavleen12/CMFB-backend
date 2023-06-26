@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 const mongoURI =
-  "mongodb+srv://piyushsati4:root@cluster0.aqmvp7c.mongodb.net/CMFB?retryWrites=true&w=majority";
+  "mongodb+srv://pavleen12:root@cluster0.aqmvp7c.mongodb.net/CMFB?retryWrites=true&w=majority";
 
 
 
