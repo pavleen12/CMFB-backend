@@ -12,30 +12,6 @@ const mongoDB = async () => {
     })
     .then(async () => {
       console.log("Connected to MongoDB");
-
-      // Start the server
-      //   app.listen(3000, () => {
-      //     console.log('Server is running on port 3000');
-      //   });
-
-      mongoose.connection.db.listCollections().toArray()
-      .then((collections) => {
-        console.log('Collections:');
-        collections.forEach((collection) => {
-          console.log(collection.name );
-        });
-      })
-      .catch((error) => {
-        console.error('Error retrieving collections', error);
-      });
-      
-
-
-      const Users = mongoose.model("Users");
-
-     
-      const fetchedData = await Users.find({});
-      console.log(fetchedData);
      
     })
     .catch((error) => {

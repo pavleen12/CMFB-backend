@@ -24,15 +24,13 @@ const userSchema = new Schema({
     type: String,
     required: true
   },
-  role_id: {
-    type: Number,
-    ref: 'role_id',
+  role: {
+    type: String,
     required: true
   },
   user_id: {
-    type: Number,
-    ref: 'role_id',
-    required: true
+    type: mongoose.Schema.Types.ObjectId,
+    auto: true
   }
 });
 
