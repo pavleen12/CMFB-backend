@@ -5,7 +5,7 @@ const { body, validationResult } = require("express-validator");
 const mongoose = require('mongoose');
 const ObjectId = mongoose.Types.ObjectId;
 
-// const bcrypt = require('bcrypt');
+const bcrypt = require('bcrypt');
 // const jwt = require('jsonwebtoken');
 const validateUserData = [
   body('name').notEmpty().withMessage('Name is required'),
@@ -34,25 +34,25 @@ router.post("/register",validateUserData, async (req, res) => {
       return res.status(400).json({ message: 'User already exists' });
     }
   
+    let salt = await bcrypt.genSalt(10)
+    let securePassword = await bcrypt.hash(password, salt)
+
+
     // Create a new user object
     //user registration
-    const newUser = new Users({
-      email,
-      address,
-      phone,
-      role,
-      name,
-      password
-    });
+    const newUser = new Users();
+    
+    newUser.email = email;
+    newUser.address = address,
+    newUser.phone = phone,
+    newUser.role = role,
+    newUser.name = name,
+    newUser.password = securePassword;
+    
     
     // Save the user to the database
     const savedUser = await newUser.save();
 
-    
-
-    // // Hash the password
-    // const saltRounds = 10;
-    // const hashedPassword = await bcrypt.hash(password, saltRounds);
 
     // // Create a new user
     // const newUser = new User({ name, email, password: hashedPassword });
@@ -86,20 +86,14 @@ router.post('/login', validateLoginData, async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // Check if the password matches
-    if (user.password !== password) {
-      return res.status(401).json({ message: 'Invalid password' });
-    }
+    const isPasswordValid = await bcrypt.compare(password, user.password);
 
-    // User authentication successful
-    if(req.body.password === user.password){
-      res.status(200).json({ message: 'Login successful', user });
+    if (!isPasswordValid) {
+      // Passwords do not match
+      return res.status(401).json({ message: 'Invalid credentials' });
     }
-    // Compare the passwords
-    // const isPasswordValid = await bcrypt.compare(password, user.password);
-    // if (!isPasswordValid) {
-    //   return res.status(401).json({ message: 'Invalid password' });
-    // }
+ 
+    res.status(200).json({ message: 'Login successful', user });
 
     // Generate JWT token
     // const token = jwt.sign({ userId: user._id }, 'your-secret-key', {
@@ -116,6 +110,7 @@ router.post('/login', validateLoginData, async (req, res) => {
 router.get("/getAllUsers", async (req, res) => {
   try {
     const fetchedusers = await Users.find({});
+    console.log(fetchedusers)
     // const users = await Users.find(); // Fetch all users from the User collection
     res.json(fetchedusers); // Return the users as a JSON response
   } catch (error) {
@@ -138,7 +133,7 @@ router.post('/getUser',
 
 
   try {
-    const user = await Users.findOne(req.params.email);
+    const user = await Users.findOne(req.params.email).populate('role');
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }

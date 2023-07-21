@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 const mongoURI =
-  "mongodb+srv://chetanrawat560933:*Cricket3167@cluster0.qvorlem.mongodb.net/";
+  "mongodb+srv://chetanrawat560933:*Cricket3167@cluster0.qvorlem.mongodb.net/CMFB";
 
 
 const mongoDB = async () => {
