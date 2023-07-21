@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
-
 const { Schema } = mongoose;
+
+
 
 const userSchema = new Schema({
   name: {
@@ -24,17 +25,21 @@ const userSchema = new Schema({
     type: String,
     required: true
   },
-  role: {
-    type: String,
-    required: true
+  role_id: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: true,
+    ref: 'Role'
   },
   user_id: {
     type: mongoose.Schema.Types.ObjectId,
-    auto: true
+    default: mongoose.Types.ObjectId,
+    unique: true,
+    auto:true
   }
 });
 
-//user sollction in db
+
+
 const Users = mongoose.model('Users', userSchema,'Users');
 
 module.exports = Users;
