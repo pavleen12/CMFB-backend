@@ -9,20 +9,6 @@ const apiKey =
 
 class Redis {
   getRedisData = async (key) => {
-    // await fetch(`${upstashURL}/get/${key}`, {
-    //     headers: {
-    //       Authorization: `Bearer ${apiKey}`
-    //     }
-    //   })
-    //   .then(response => {
-    //     console.log(response.json());
-    //     //   return response.json()
-    // }).then(data => console.log(data , "ffffff"))
-    //   .catch(error => {
-    //         console.error('Error fetching data from Upstash Redis:', error);
-    //         throw error;
-    //       });
-
     return await axios
       .get(`${upstashURL}/get/${key}`, {
         headers: {
@@ -41,6 +27,7 @@ class Redis {
   };
 
   setRedisData = (key, data) => {
+    // return
     axios
       .get(`${upstashURL}/set/${key}/${data}`, {
         headers: {
@@ -50,10 +37,10 @@ class Redis {
       })
       .then((response) => 
       {
+        
         return response.data
     })
       .then((data) => {
-        console.log(data, "neha set");
         return data;
       });
   };

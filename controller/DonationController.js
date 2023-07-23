@@ -12,52 +12,50 @@ const redisInstance = new Redis();
 
 router.post("/donate",
   [
-    body('donation_type').notEmpty().withMessage('Donation type is required.'),
-    body('donation_article').notEmpty().withMessage('Donation article is required.'),
     body('donation_amount').isNumeric().withMessage('Donation amount must be a number.'),
     body('donation_datetime').isISO8601().withMessage('Invalid date format.'),
-    body('user_id').isNumeric().withMessage('User ID must be a number.'),
+    body('user_name').notEmpty().withMessage('User Name must not be null.'),
+    body('user_email').notEmpty().withMessage('User Email must not be null.'),
   ], async (req, res) => {
 
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
+      return res.status(400).json({ message: errors.array() });
     }
 
     try {
 
       const newDonation = await Donations.create({
-        donation_type: req.body.donation_type,
-        donation_article: req.body.donation_article,
         donation_amount: req.body.donation_amount,
         donation_datetime: req.body.donation_datetime,
-        user_id: req.body.user_id,
+        user_name: req.body.user_name,
+        user_email: req.body.user_email
       });
 
-      res.status(201).json({ message: "Donation made successfully" });
+      res.status(201).json({ message: "Donation made successfully", data: newDonation });
     } catch (error) {
-      res.status(500).json({ message: "Internal server error" });
+      res.status(500).json({ message: "Internal server error" , error: error });
     }
   });
 
 router.get("/getAllDonations", async (req, res) => {
   try {
     redisInstance.getRedisData('getAllDonations').then(data => {
-      // console.log("entered get metho and got somethingr" , data)
+      console.log("entered get metho and got somethingr" , data)
       if (data.result) {
         console.log('Data found in Redis:', data);
-        return res.json(JSON.parse(data.result))
+        return res.status(200).json({ source: "Redis" , message: "Fetched all Donations successfully " , data: JSON.parse(data.result)})
       } else {
         // If data is not found in Redis, fetch it from the database and return it
         Donations.find({}).then(databaseData => {
           // Store the data in Redis cache for future use (optional)
           redisInstance.setRedisData('/getAllDonations', JSON.stringify(databaseData));
-          return res.json(databaseData);  // Return the donations as a JSON response
+          return res.status(200).json({ source: "Database" , message: "Fetched all Donations successfully", data: databaseData});  // Return the donations as a JSON response
         })
       }
     });
   } catch (error) {
-    res.status(500).json({ message: "Error fetching donations" });
+    res.status(500).json({ message: "Error fetching donations", error: error });
   }
 });
 
@@ -66,47 +64,53 @@ router.get("/getAllDonations", async (req, res) => {
 router.get('/donations/:id', async (req, res) => {
   try {
     const { id } = req.params;
+    const baseURL = 'donations';
+    const setURL = `${baseURL}/id:${id}`;
     if (!ObjectId.isValid(id)) {
       return res.status(400).json({ message: 'Invalid donation ID' });
     }
+    console.log(setURL)
+    // redisInstance.getRedisData(`donations/${id}`).then(data => {
+    //   console.log("entered get metho and got somethingr" )
+    //   if (data.result) {
+    //     console.log('Data found in Redis:');
+    //     return res.status(200).json({ source: "Redis" , message: "Fetched all Donations successfully " , data: JSON.parse(data.result)})
+    //   } else {
+    //     console.log("entered else");
+    //     // If data is not found in Redis, fetch it from the database and return it
+        Donations.findById(req.params.id).then(databaseData => {
 
-    fetch("https://usw2-sacred-caribou-30494.upstash.io/get/donations/:id", {
-      headers: {
-        Authorization: "Bearer AnceACQgZmM2NmEyZTctMGI3ZS00YWQ2LTk3ZjYtYmI5NjJlYzRkN2EwqlhHQr1j6hOcXxOrSp6RA1s5XfXy7m71JxCnSKaL2Bo="
-      }
-    }).then(response => response.json())
-      .then(data => console.log(data));
-
-    // If data doesn't exist in the cache, query the database
-    // After fetching the data from the database, store it in the cache
-
-    const donation = await Donations.findById(req.params.id);
-
-
-    if (!donation) {
-      return res.status(404).json({ message: 'Donation not found' });
-    }
-    res.json({ source: 'api', donation });
-
-
-
+          if (!databaseData) {
+            // Data with the specified id was not found in the database
+            return res.status(404).json({ message: "Donation Data not found" });
+          }
+          // Store the data in Redis cache for future use (optional)
+          // redisInstance.setRedisData(setURL, JSON.stringify(databaseData));
+          return res.status(200).json({ source: "Database" , message: `Fetched Donations Data successfully for ${id}` , data: databaseData});  // Return the donations as a JSON response
+        })
+    //   }
+    // });
   } catch (error) {
-    console.error('Error fetching donation:', error);
+    console.error('Error fetching donation:');
     res.status(500).json({ message: 'Error fetching donation' });
   }
 });
 
 
 // Route to update a donation
-router.put('/donations/:id', async (req, res) => {
+router.put('/donations/:id',[
+  body('donation_amount').isNumeric().withMessage('Donation amount must be a number.'),
+  body('donation_datetime').isISO8601().withMessage('Invalid date format.'),
+  body('user_name').notEmpty().withMessage('User Name must not be null.'),
+  body('user_email').notEmpty().withMessage('User Email must not be null.'),
+], async (req, res) => {
   try {
     // Check for validation errors
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
+      return res.status(400).json({ message: errors.array() });
     }
 
-    console.log(req.params)
     const { id } = req.params;
     if (!ObjectId.isValid(id)) {
       return res.status(400).json({ message: 'Invalid donation ID' });
@@ -122,10 +126,10 @@ router.put('/donations/:id', async (req, res) => {
       return res.status(404).json({ message: 'Donation not found' });
     }
 
-    res.json(updatedDonation);
+    res.status(200).json({ message: 'Donation updated successfully', data: updatedDonation});
   } catch (error) {
     console.error('Error updating donation:', error);
-    res.status(500).json({ message: 'Error updating donation' });
+    res.status(500).json({ message: 'Error updating donation', error });
   }
 });
 
@@ -141,7 +145,7 @@ router.delete('/donations/:id', async (req, res) => {
     if (!deletedDonation) {
       return res.status(404).json({ message: 'Donation not found' });
     }
-    res.json({ message: 'Donation deleted successfully' });
+    res.status(200).json({ message: 'Donation deleted successfully', data: deletedDonation});
   } catch (error) {
     console.error('Error deleting donation:', error);
     res.status(500).json({ message: 'Error deleting donation' });

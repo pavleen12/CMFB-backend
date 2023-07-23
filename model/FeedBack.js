@@ -23,12 +23,6 @@ const feedbackSchema = new Schema({
   feedback_date: {
     type: Date,
     required: true
-  },
-  feedback_id: {
-    type: mongoose.Schema.Types.ObjectId,
-    default: mongoose.Types.ObjectId,
-    unique: true,
-    // autoIncrement: true,
   }
 });
 

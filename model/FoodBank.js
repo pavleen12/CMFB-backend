@@ -4,14 +4,21 @@ const { Schema } = mongoose;
 
 
 const foodBankSchema = new Schema({
-  details: {
+  address: {
     type: String,
     required: true
   },
-  id: {
-    type: mongoose.Schema.Types.ObjectId,
-    default: mongoose.Types.ObjectId,
-    unique: true,
+  zipcode:{
+    type: String,
+    required: true
+  },
+  province:{
+    type: String,
+    required: true
+  },
+  helpline:{
+    type: String,
+    required: true
   }
 });
 

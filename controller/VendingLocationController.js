@@ -4,6 +4,8 @@ const router = express.Router();
 const { body, validationResult } = require("express-validator");
 const mongoose = require('mongoose');
 const ObjectId = mongoose.Types.ObjectId;
+const Redis = require('../redis_func');
+const redisInstance = new Redis();
 
 // VendingLocation CRUD operations
 router.post(
@@ -33,7 +35,7 @@ router.post(
       // Save the new vending location object to the database
       const createdVendingLocation = await newVendingLocation.save();
 
-      res.status(201).json(createdVendingLocation);
+      res.status(201).json({ message: "Donation made successfully", data: createdVendingLocation });
     } catch (error) {
       console.error("Error creating vending location:", error);
       res.status(500).json({ message: "Error creating vending location" });
@@ -44,8 +46,20 @@ router.post(
 // Get all vending locations
 router.get("/allVendingLocations", async (req, res) => {
   try {
-    const vendingLocations = await VendingLocation.find({});
-    res.json(vendingLocations);
+    redisInstance.getRedisData('getAllDonations').then(data => {
+      console.log("entered get metho and got somethingr" , data)
+      if (data.result) {
+        console.log('Data found in Redis:', data);
+        return res.status(200).json({ source: "Redis" , message: "Fetched all Vending Location successfully " , data: JSON.parse(data.result)})
+      } else {
+        // If data is not found in Redis, fetch it from the database and return it
+        VendingLocation.find({}).then(databaseData => {
+          // Store the data in Redis cache for future use (optional)
+          redisInstance.setRedisData('allVendingLocations', JSON.stringify(databaseData));
+          return res.status(200).json({ source: "Database" , message: "Fetched all Vending Location successfully", data: databaseData});  // Return the donations as a JSON response
+        })
+      }
+    });
   } catch (error) {
     console.error("Error getting vending locations:", error);
     res.status(500).json({ message: "Error getting vending locations" });
@@ -64,7 +78,7 @@ router.get("/vending-location/:id", async (req, res) => {
     if (!vendingLocation) {
       return res.status(404).json({ message: "Vending location not found" });
     }
-    res.json(vendingLocation);
+    res.status(200).json({ message: 'Get Vending Location successfully', data: vendingLocation});
   } catch (error) {
     console.error("Error getting vending location:", error);
     res.status(500).json({ message: "Error getting vending location" });
@@ -104,7 +118,7 @@ router.put(
         return res.status(404).json({ message: "Vending location not found" });
       }
 
-      res.json(updatedVendingLocation);
+      res.status(200).json({ message: 'Donation updated successfully', data: updatedVendingLocation});
     } catch (error) {
       console.error("Error updating vending location:", error);
       res.status(500).json({ message: "Error updating vending location" });
@@ -126,10 +140,10 @@ router.delete("/vending-locations/:id", async (req, res) => {
     if (!deletedVendingLocation) {
       return res.status(404).json({ message: "Vending location not found" });
     }
-    res.json({ message: "Vending location deleted" });
+    res.status(200).json({ message: "Vending location deleted", data: deletedVendingLocation });
   } catch (error) {
     console.error("Error deleting vending location:", error);
-    res.status(500).json({ message: "Error deleting vending location" });
+    res.status(500).json({ message: "Error deleting vending location", error });
   }
 });
 

@@ -4,23 +4,38 @@ const router = express.Router();
 const { body, validationResult } = require("express-validator");
 const mongoose = require('mongoose');
 const ObjectId = mongoose.Types.ObjectId;
+const Redis = require('../redis_func');
+const redisInstance = new Redis();
 
 // InventoryManagement CRUD operations
 router.post('/addInventory', async (req, res) => {
     try {
       const newInventoryManagement = await Inventory.create(req.body);
-      res.status(201).json(newInventoryManagement);
+      res.status(201).json({ message: "Inventory added successfully", data: newInventoryManagement});
     } catch (error) {
-      res.status(500).json({ message: 'Error creating inventory management' });
+      res.status(500).json({ message: 'Error creating inventory management', error });
     }
   });
   
-  router.get('/inventory-managements', async (req, res) => {
+  router.get('/getAllInventory', async (req, res) => {
     try {
-      const inventoryManagements = await Inventory.find();
-      res.json(inventoryManagements);
+
+      redisInstance.getRedisData('getAllInventory').then(data => {
+        console.log("entered get metho and got somethingr" , data)
+        if (data.result) {
+          console.log('Data found in Redis:', data);
+          return res.status(200).json({ source: "Redis" , message: "Fetched all Inventory info successfully " , data: JSON.parse(data.result)})
+        } else {
+          // If data is not found in Redis, fetch it from the database and return it
+          Inventory.find({}).then(databaseData => {
+            // Store the data in Redis cache for future use (optional)
+            redisInstance.setRedisData('getAllInventory', JSON.stringify(databaseData));
+            return res.status(200).json({ source: "Database" , message: "Fetched all Inventory info successfully", data: databaseData});  // Return the donations as a JSON response
+          })
+        }
+      });
     } catch (error) {
-      res.status(500).json({ message: 'Error fetching inventory managements' });
+      res.status(500).json({ message: 'Error fetching inventory managements', error});
     }
   });
 
@@ -40,15 +55,6 @@ router.post('/addInventory', async (req, res) => {
   }
   });
   
-  router.get("/getAllInventory", async (req, res) => {
-  try {
-    const fetchedInventory = await Inventory.find({});
-    res.json(fetchedInventory); 
-  } catch (error) {
-    res.status(500).json({ message: "Error fetching FoodBanks" });
-  }
-  });
-  
   
   
   router.get('/inventory/:id', async (req, res) => {
@@ -62,7 +68,7 @@ router.post('/addInventory', async (req, res) => {
     if (!getInventory) {
       return res.status(404).json({ message: 'FoodBanks not found' });
     }
-    res.json(getInventory);
+    res.status(200).json({message: "Get inventory success", data: getInventory});
   } catch (error) {
     console.error('Error fetching Inventory item details:', error);
     res.status(500).json({ message: 'Error fetching Inventory item details' });
@@ -79,7 +85,6 @@ router.post('/addInventory', async (req, res) => {
       return res.status(400).json({ errors: errors.array() });
     }
   
-    console.log(req.params)
     const { id } = req.params;
     if (!ObjectId.isValid(id)) {
       return res.status(400).json({ message: 'Invalid Inventory item details ID' });
@@ -95,10 +100,10 @@ router.post('/addInventory', async (req, res) => {
       return res.status(404).json({ message: 'Inventory item details not found' });
     }
   
-    res.json(updatedInventory);
+    res.status(200).json({ message: 'Inventory updated successfully', data:updatedInventory });
   } catch (error) {
     console.error('Error updating Inventory item details:', error);
-    res.status(500).json({ message: 'Error updating Inventory item details' });
+    res.status(500).json({ message: 'Error updating Inventory item details', error });
   }
   });
   
@@ -114,10 +119,10 @@ router.post('/addInventory', async (req, res) => {
     if (!deletedInventory) {
       return res.status(404).json({ message: 'No such FoodBanks' });
     }
-    res.json({ message: 'Inventory item details deleted successfully' });
+    res.status(200).json({ message: 'Inventory item details deleted successfully', data: deletedInventory });
   } catch (error) {
     console.error('Error deleting Inventory item details:', error);
-    res.status(500).json({ message: 'Error deleting Inventory item details' });
+    res.status(500).json({ message: 'Error deleting Inventory item details', error });
   }
   });
 

@@ -4,6 +4,8 @@ const router = express.Router();
 const { body, validationResult } = require("express-validator");
 const mongoose = require('mongoose');
 const ObjectId = mongoose.Types.ObjectId;
+const Redis = require('../redis_func');
+const redisInstance = new Redis();
 
 // Feedback CRUD operations
 router.post("/feedBack",
@@ -24,19 +26,31 @@ router.post("/feedBack",
       user_id: req.body.user_id,
     });;
 
-    res.status(201).json({ message: "Feedback made successfully" });
+    res.status(201).json({ message: "Feedback made successfully", data:  newFeedback});
 } catch (error) {
   console.error(error);
-  res.status(500).json({ message: "Internal server error" });
+  res.status(500).json({ message: "Internal server error", error });
 }
 });
 
 router.get("/getAllFeedBacks", async (req, res) => {
 try {
-  const fetchedFeedBack = await FeedBack.find({});
-  res.json(fetchedFeedBack); 
+  redisInstance.getRedisData('getAllFeedBacks').then(data => {
+      console.log("entered get metho and got somethingr" , data)
+      if (data.result) {
+        console.log('Data found in Redis:', data);
+        return res.status(200).json({ source: "Redis" , message: "Fetched all Feedback successfully " , data: JSON.parse(data.result)})
+      } else {
+        // If data is not found in Redis, fetch it from the database and return it
+        FeedBack.find({}).then(databaseData => {
+          // Store the data in Redis cache for future use (optional)
+          redisInstance.setRedisData('getAllFeedBacks', JSON.stringify(databaseData));
+          return res.status(200).json({ source: "Database" , message: "Fetched all Feedback successfully", data: databaseData});  // Return the donations as a JSON response
+        })
+      }
+    });
 } catch (error) {
-  res.status(500).json({ message: "Error fetching feedback" });
+  res.status(500).json({ message: "Error fetching feedback", error });
 }
 });
 
@@ -53,7 +67,7 @@ try {
   if (!getFeedback) {
     return res.status(404).json({ message: 'Feedback not found' });
   }
-  res.json(getFeedback);
+  res.status(200).json({message: "Feedback got successfully", data:  getFeedback});
 } catch (error) {
   console.error('Error fetching feedback:', error);
   res.status(500).json({ message: 'Error fetching feedback' });
@@ -92,10 +106,10 @@ try {
     return res.status(404).json({ message: 'FeedBack not found' });
   }
 
-  res.json(updatedFeedback);
+  res.status(200).json({ message: 'Feedback Updated Successfully' , data: updatedFeedback});
 } catch (error) {
   console.error('Error updating feedback:', error);
-  res.status(500).json({ message: 'Error updating feedback' });
+  res.status(500).json({ message: 'Error updating feedback', error });
 }
 });
 
@@ -111,7 +125,7 @@ try {
   if (!deletedFeedback) {
     return res.status(404).json({ message: 'No such Feedback' });
   }
-  res.json({ message: 'Feedback deleted successfully' });
+  res.status(200).json({ message: 'Feedback deleted successfully', data: deletedFeedback });
 } catch (error) {
   console.error('Error deleting feedback:', error);
   res.status(500).json({ message: 'Error deleting feedback' });
