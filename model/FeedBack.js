@@ -1,6 +1,5 @@
 const mongoose = require('mongoose');
 // const autoIncrement = require('mongoose-auto-increment');
-// const connection = mongoose.createConnection('mongodb+srv://piyushsati4:root@cluster0.aqmvp7c.mongodb.net/CMFB?retryWrites=true&w=majority');
 const { Schema } = mongoose;
 
 // Initialize auto-increment
