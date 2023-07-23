@@ -20,10 +20,6 @@ class Redis {
       {
         return response.data
     })
-    //   .then((data) => {
-    //     console.log(data, "neha");
-    //     return data;
-    //   });
   };
 
   setRedisData = (key, data) => {
