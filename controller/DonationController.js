@@ -5,6 +5,10 @@ const { body, validationResult } = require("express-validator");
 const mongoose = require('mongoose');
 const ObjectId = mongoose.Types.ObjectId;
 
+const Redis = require('../redis_func');
+const { json } = require("body-parser");
+const redisInstance = new Redis();
+
 
 router.post("/donate",
 [
@@ -42,8 +46,29 @@ router.post("/donate",
 
 router.get("/getAllDonations", async (req, res) => {
   try {
-    const allDonations = await Donations.find({});
-    res.json(allDonations); // Return the donations as a JSON response
+    redisInstance.getRedisData('getAllDonations').then(data => {
+    console.log("entered get metho and got somethingr" , data)
+      if (data.result) {
+        console.log('Data found in Redis:', data);
+        console.log( data.result)
+        console.log( JSON.parse(JSON.stringify(data)));
+        console.log( JSON.parse(data));
+
+        return res.json(data)
+      } else {
+        console.log("entered here")
+        // If data is not found in Redis, fetch it from the database and return it
+        Donations.find({}).then(databaseData => {
+          // Store the data in Redis cache for future use (optional)
+            redisInstance.setRedisData('foo', 'bar')
+            redisInstance.setRedisData('/getAllDonations', JSON.stringify(databaseData));
+            console.log('Data fetched from the database:', typeof databaseData);
+            return res.json(databaseData);  // Return the donations as a JSON response
+          })
+        }
+      });
+   
+    
   } catch (error) {
     res.status(500).json({ message: "Error fetching donations" });
   }
@@ -58,11 +83,26 @@ router.get('/donations/:id', async (req, res) => {
       return res.status(400).json({ message: 'Invalid donation ID' });
     }
     
-    const donation = await Donations.findById(req.params.id);
-    if (!donation) {
-      return res.status(404).json({ message: 'Donation not found' });
-    }
-    res.json(donation);
+    fetch("https://usw2-sacred-caribou-30494.upstash.io/get/donations/:id", {
+      headers: {
+        Authorization: "Bearer AnceACQgZmM2NmEyZTctMGI3ZS00YWQ2LTk3ZjYtYmI5NjJlYzRkN2EwqlhHQr1j6hOcXxOrSp6RA1s5XfXy7m71JxCnSKaL2Bo="
+      }
+    }).then(response => response.json())
+      .then(data => console.log(data));
+
+        // If data doesn't exist in the cache, query the database
+        // After fetching the data from the database, store it in the cache
+        
+        const donation = await Donations.findById(req.params.id);
+       
+
+        if (!donation) {
+          return res.status(404).json({ message: 'Donation not found' });
+        }
+        res.json({ source: 'api', donation });
+      
+    
+    
   } catch (error) {
     console.error('Error fetching donation:', error);
     res.status(500).json({ message: 'Error fetching donation' });

@@ -5,11 +5,36 @@ const app = express();
 const port = 5040;
 const initializeIDSequence = require('./initializeIDSeq')
 const registerSchemas = require('./registerSchema')
+const redis = require('redis');
+const util = require('util')
+const IOREDIS = require('ioredis')
 
-
+const ioredis_client = new IOREDIS("redis://default:40e9a13e3edc4bab89ad0a09fa41e524@usw2-sacred-caribou-30494.upstash.io:30494");
+ioredis_client.set('name', 'Elon');
 // calling exports and connecting to mongodb
 const mongoDB = require('./db');
 mongoDB();
+
+// const REDIS_URL = 'redis://127.0.0.1:6379';
+// const REDIS_PORT = process.env.PORT || 6379
+
+// const client = redis.createClient(REDIS_URL);
+// const redisClient = redis.createClient({
+//   host: '127.0.0.1', // Redis server host
+//   port: REDIS_PORT,        // Redis server port
+//   legacyMode: true 
+// });
+
+// client.connect().then(async (res) => {
+//     console.log('connected');
+// });
+
+
+
+// redisClient.hGet = util.promisify(redisClient.hGet);
+// redisClient.on('connect', () => console.log('Redis client connected'));
+// redisClient.on('error', (err) => console.error('Redis error:', err));
+
 
 const bodyParser = require('body-parser');
 // require('dotenv').config();
@@ -18,16 +43,7 @@ const bodyParser = require('body-parser');
 
 // Middleware
 app.use(cors());
-// app.use(cors({
-//     allowedHeaders: 'Content-Type',
-//     methods: 'POST'
-//   }));
-//http://localhost:3000/#/register
-// app.use((req,res,next) => {
-//     res.setHeader("Access-Control-Allow-Origin", "http://localhost:3000/#/register");
-//     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-//     next();
-// });
+// Middleware to check the cache before fetching data from the database
 // app.use(express.json);
 app.use(bodyParser.json());
 app.use('/cmfb/user', require("./controller/UserController"));
@@ -62,3 +78,5 @@ app.listen(port, () => {
 })
 
   
+
+module.exports = ioredis_client;

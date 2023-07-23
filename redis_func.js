@@ -1,0 +1,62 @@
+const express = require("express");
+const router = express.Router();
+const axios = require("axios");
+const ioredis_client = require("./index");
+
+const upstashURL = "https://usw2-sacred-caribou-30494.upstash.io";
+const apiKey =
+  "AnceACQgZmM2NmEyZTctMGI3ZS00YWQ2LTk3ZjYtYmI5NjJlYzRkN2EwqlhHQr1j6hOcXxOrSp6RA1s5XfXy7m71JxCnSKaL2Bo=";
+
+class Redis {
+  getRedisData = async (key) => {
+    // await fetch(`${upstashURL}/get/${key}`, {
+    //     headers: {
+    //       Authorization: `Bearer ${apiKey}`
+    //     }
+    //   })
+    //   .then(response => {
+    //     console.log(response.json());
+    //     //   return response.json()
+    // }).then(data => console.log(data , "ffffff"))
+    //   .catch(error => {
+    //         console.error('Error fetching data from Upstash Redis:', error);
+    //         throw error;
+    //       });
+
+    return await axios
+      .get(`${upstashURL}/get/${key}`, {
+        headers: {
+          Authorization:
+            "Bearer AnceACQgZmM2NmEyZTctMGI3ZS00YWQ2LTk3ZjYtYmI5NjJlYzRkN2EwqlhHQr1j6hOcXxOrSp6RA1s5XfXy7m71JxCnSKaL2Bo=",
+        },
+      })
+      .then((response) => 
+      {
+        return response.data
+    })
+    //   .then((data) => {
+    //     console.log(data, "neha");
+    //     return data;
+    //   });
+  };
+
+  setRedisData = (key, data) => {
+    axios
+      .get(`${upstashURL}/set/${key}/${data}`, {
+        headers: {
+          Authorization:
+            "Bearer AXceACQgZmM2NmEyZTctMGI3ZS00YWQ2LTk3ZjYtYmI5NjJlYzRkN2EwNDBlOWExM2UzZWRjNGJhYjg5YWQwYTA5ZmE0MWU1MjQ=",
+        },
+      })
+      .then((response) => 
+      {
+        return response.data
+    })
+      .then((data) => {
+        console.log(data, "neha set");
+        return data;
+      });
+  };
+}
+
+module.exports = Redis;
