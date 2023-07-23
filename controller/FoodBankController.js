@@ -4,10 +4,15 @@ const router = express.Router();
 const { body, validationResult } = require("express-validator");
 const mongoose = require('mongoose');
 const ObjectId = mongoose.Types.ObjectId;
+const Redis = require('../redis_func');
+const redisInstance = new Redis();
 
 router.post("/foodbank",
 [
-  body('details').notEmpty().withMessage('Deatils is required.'),
+  body('address').notEmpty().withMessage('Address is required.'),
+  body('zipcode').notEmpty().withMessage('Zipcode is required.'),
+  body('province').notEmpty().withMessage('Province is required.'),
+  body('helpline').notEmpty().withMessage('Helpline is required.')
 ], async (req, res) => {
   
   const errors = validationResult(req);
@@ -21,19 +26,31 @@ router.post("/foodbank",
       details: req.body.details,
     });;
 
-    res.status(201).json({ message: "FoodBank created successfully" });
+    res.status(201).json({ message: "FoodBank created successfully", data: newFoodBank });
 } catch (error) {
   console.error(error);
-  res.status(500).json({ message: "Internal server error" });
+  res.status(500).json({ message: "Internal server error", error });
 }
 });
 
 router.get("/getAllFoodBanks", async (req, res) => {
 try {
-  const fetchedFoodBanks = await FoodBanks.find({});
-  res.json(fetchedFoodBanks); 
+  redisInstance.getRedisData('getAllFoodBanks').then(data => {
+    console.log("entered get metho and got somethingr" , data)
+    if (data.result) {
+      console.log('Data found in Redis:', data);
+      return res.status(200).json({ source: "Redis" , message: "Fetched all Food Bank successfully " , data: JSON.parse(data.result)})
+    } else {
+      // If data is not found in Redis, fetch it from the database and return it
+      FoodBanks.find({}).then(databaseData => {
+        // Store the data in Redis cache for future use (optional)
+        redisInstance.setRedisData('getAllFoodBanks', JSON.stringify(databaseData));
+        return res.status(200).json({ source: "Database" , message: "Fetched all FoodBank successfully", data: databaseData});  // Return the donations as a JSON response
+      })
+    }
+  }); 
 } catch (error) {
-  res.status(500).json({ message: "Error fetching FoodBanks" });
+  res.status(500).json({ message: "Error fetching FoodBanks", error });
 }
 });
 
@@ -56,7 +73,13 @@ try {
 });
 
 // Route to update a foodbanks
-router.put('/foodBank/:id', async (req, res) => {
+router.put('/foodBank/:id',
+[
+  body('address').notEmpty().withMessage('Address is required.'),
+  body('zipcode').notEmpty().withMessage('Zipcode is required.'),
+  body('province').notEmpty().withMessage('Province is required.'),
+  body('helpline').notEmpty().withMessage('Helpline is required.')
+], async (req, res) => {
 try {
   // Check for validation errors
   const errors = validationResult(req);
@@ -80,10 +103,10 @@ try {
     return res.status(404).json({ message: 'FoodBanks not found' });
   }
 
-  res.json(updatedFoodBank);
+  res.status(404).json({ message: 'FoodBank updated successfully', data: updatedFoodBank});
 } catch (error) {
   console.error('Error updating FoodBanks:', error);
-  res.status(500).json({ message: 'Error updating FoodBanks' });
+  res.status(500).json({ message: 'Error updating FoodBanks', error });
 }
 });
 
@@ -99,10 +122,10 @@ try {
   if (!deletedFoodBanks) {
     return res.status(404).json({ message: 'No such FoodBanks' });
   }
-  res.json({ message: 'FoodBanks deleted successfully' });
+  res.status(200).json({ message: 'FoodBank deleted successfully', data: deletedFoodBanks});
 } catch (error) {
   console.error('Error deleting FoodBanks:', error);
-  res.status(500).json({ message: 'Error deleting FoodBanks' });
+  res.status(500).json({ message: 'Error deleting FoodBanks', error });
 }
 });
 

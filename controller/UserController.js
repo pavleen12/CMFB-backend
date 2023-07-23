@@ -4,6 +4,8 @@ const router = express.Router();
 const { body, validationResult } = require("express-validator");
 const mongoose = require('mongoose');
 const ObjectId = mongoose.Types.ObjectId;
+const Redis = require('../redis_func');
+const redisInstance = new Redis();
 
 const bcrypt = require('bcrypt');
 // const jwt = require('jsonwebtoken');
@@ -58,9 +60,9 @@ router.post("/register",validateUserData, async (req, res) => {
     // const newUser = new User({ name, email, password: hashedPassword });
     // await newUser.save();
 
-    res.status(201).json({ message: "User registered successfully", savedUser });
+    res.status(201).json({ message: "User registered successfully", data: savedUser });
   } catch (error) {
-    res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({ message: "Internal server error", error });
   }
 });
 
@@ -93,7 +95,7 @@ router.post('/login', validateLoginData, async (req, res) => {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
  
-    res.status(200).json({ message: 'Login successful', user });
+    res.status(200).json({ message: 'Login successful', data: user });
 
     // Generate JWT token
     // const token = jwt.sign({ userId: user._id }, 'your-secret-key', {
@@ -102,19 +104,30 @@ router.post('/login', validateLoginData, async (req, res) => {
 
     
   } catch (error) {
-    res.status(500).json({ message: 'Internal server error' });
+    res.status(500).json({ message: 'Internal server error', error });
   }
 });
 
 //get all user
 router.get("/getAllUsers", async (req, res) => {
   try {
-    const fetchedusers = await Users.find({});
-    console.log(fetchedusers)
-    // const users = await Users.find(); // Fetch all users from the User collection
-    res.json(fetchedusers); // Return the users as a JSON response
+    console.log("entered");
+    redisInstance.getRedisData('getAllUsers').then(data => {
+      console.log("entered get metho and got somethingr" , data)
+      if (data.result) {
+        console.log('Data found in Redis:', data);
+        return res.status(200).json({ source: "Redis" , message: "Fetched all Users data successfully " , data: JSON.parse(data.result)})
+      } else {
+        // If data is not found in Redis, fetch it from the database and return it
+        Users.find({}).then(databaseData => {
+          // Store the data in Redis cache for future use (optional)
+          redisInstance.setRedisData('getAllUsers', JSON.stringify(databaseData));
+          return res.status(200).json({ source: "Database" , message: "Fetched all Users data successfully", data: databaseData});  // Return the donations as a JSON response
+        })
+      }
+    });
   } catch (error) {
-    res.status(500).json({ message: "Error fetching users" });
+    res.status(500).json({ message: "Error fetching users", error });
   }
 });
 
@@ -137,10 +150,10 @@ router.post('/getUser',
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-    res.json(user);
+    res.status(200).json({message: "User fetched", data: user});
   } catch (error) {
     console.error('Error fetching user:', error);
-    res.status(500).json({ message: 'Error fetching user' });
+    res.status(500).json({ message: 'Error fetching user', error });
   }
 });
 
@@ -172,10 +185,10 @@ router.put('/userUpdate', [
       return res.status(404).json({ message: 'User not found' });
     }
 
-    res.json(updatedUser);
+    res.status(200).json({ message: 'User updated successfully', data: updatedUser});
   } catch (error) {
     console.error('Error updating user:', error);
-    res.status(500).json({ message: 'Error updating user' });
+    res.status(500).json({ message: 'Error updating user', error });
   }
 });
 
@@ -199,10 +212,10 @@ async (req, res) => {
     if (!deletedUser) {
       return res.status(404).json({ message: 'User not found' });
     }
-    res.json({ message: 'User deleted successfully' });
+    res.status(200).json({ message: 'User deleted successfully', data: deletedUser });
   } catch (error) {
     console.error('Error deleting user:', error);
-    res.status(500).json({ message: 'Error deleting user' });
+    res.status(500).json({ message: 'Error deleting user', error });
   }
 });
 

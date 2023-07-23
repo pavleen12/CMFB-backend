@@ -5,29 +5,21 @@ const app = express();
 const port = 5040;
 const initializeIDSequence = require('./initializeIDSeq')
 const registerSchemas = require('./registerSchema')
+const IOREDIS = require('ioredis')
 
+const ioredis_client = new IOREDIS("redis://default:40e9a13e3edc4bab89ad0a09fa41e524@usw2-sacred-caribou-30494.upstash.io:30494");
 
 // calling exports and connecting to mongodb
 const mongoDB = require('./db');
 mongoDB();
 
+
 const bodyParser = require('body-parser');
-// require('dotenv').config();
-// const authRoutes = require('./routes/auth');
 
 
 // Middleware
 app.use(cors());
-// app.use(cors({
-//     allowedHeaders: 'Content-Type',
-//     methods: 'POST'
-//   }));
-//http://localhost:3000/#/register
-// app.use((req,res,next) => {
-//     res.setHeader("Access-Control-Allow-Origin", "http://localhost:3000/#/register");
-//     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-//     next();
-// });
+// Middleware to check the cache before fetching data from the database
 // app.use(express.json);
 app.use(bodyParser.json());
 app.use('/cmfb/user', require("./controller/UserController"));
@@ -62,3 +54,5 @@ app.listen(port, () => {
 })
 
   
+
+module.exports = ioredis_client;

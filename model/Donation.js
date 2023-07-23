@@ -1,18 +1,10 @@
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
-const IDSequence = require('./IDSequence')
+// const IDSequence = require('./IDSequence')
 
 
 
 const donationSchema = new Schema({
-  donation_type: {
-    type: String,
-    required: true
-  },
-  donation_article: {
-    type: String,
-    required: true,
-  },
   donation_amount: {
     type: Number,
     required: true
@@ -21,16 +13,19 @@ const donationSchema = new Schema({
     type: Date,
     required: true
   },
-  user_id: {
-    type: Schema.Types.ObjectId,
-    ref: 'user_id',
+  user_name :{
+    type: String,
     required: true
   },
-  donation_id: {
-    type: mongoose.Schema.Types.ObjectId,
-    default: mongoose.Types.ObjectId,
-    unique: true,
-  }
+  user_email :{
+    type: String,
+    required: true
+  },
+  // _id: {
+  //   type: mongoose.Schema.Types.ObjectId,
+  //   unique: true,
+  //   auto:true
+  // }
 });
 
 

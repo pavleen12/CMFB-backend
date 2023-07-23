@@ -28,11 +28,6 @@ const inventorySchema = new Schema({
   availability: {
     type: Boolean,
     required: true
-  },
-  item_id: {
-    type: mongoose.Schema.Types.ObjectId,
-    default: mongoose.Types.ObjectId,
-    unique: true,
   }
 });
 
