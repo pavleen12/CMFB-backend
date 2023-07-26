@@ -15,7 +15,7 @@ router.post("/donate",
     body('donation_amount').isNumeric().withMessage('Donation amount must be a number.'),
     body('donation_datetime').isISO8601().withMessage('Invalid date format.'),
     body('user_name').notEmpty().withMessage('User Name must not be null.'),
-    body('user_email').notEmpty().withMessage('User Email must not be null.'),
+    body('user_email').isEmail().withMessage('Please provide a valid email address'),
   ], async (req, res) => {
 
     const errors = validationResult(req);
