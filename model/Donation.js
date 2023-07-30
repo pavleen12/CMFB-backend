@@ -21,6 +21,11 @@ const donationSchema = new Schema({
     type: String,
     required: true
   },
+  payment_id:{
+    type: String,
+    required: true
+    
+  }
   // _id: {
   //   type: mongoose.Schema.Types.ObjectId,
   //   unique: true,

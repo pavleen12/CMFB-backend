@@ -24,6 +24,7 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use('/cmfb/user', require("./controller/UserController"));
 app.use('/cmfb/donation', require("./controller/DonationController"));
+app.use('/cmfb', require("./controller/StripeCheckout"));
 app.use('/cmfb/feedback', require("./controller/FeedbackController"));
 app.use('/cmfb/foodBank', require("./controller/FoodBankController"));
 app.use('/cmfb/inventory', require("./controller/InventoryController"));
