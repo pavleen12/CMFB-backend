@@ -23,8 +23,11 @@ router.post("/foodbank",
   
   try {
     const newFoodBank = await FoodBanks.create({
-      details: req.body.details,
-    });;
+      address: req.body.address,
+      zipcode: req.body.zipcode,
+      province: req.body.province,
+      helpline: req.body.helpline,
+    });
 
     res.status(201).json({ message: "FoodBank created successfully", data: newFoodBank });
 } catch (error) {
