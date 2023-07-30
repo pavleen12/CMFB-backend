@@ -15,7 +15,8 @@ router.post("/donate",
     body('donation_amount').isNumeric().withMessage('Donation amount must be a number.'),
     body('donation_datetime').isISO8601().withMessage('Invalid date format.'),
     body('user_name').notEmpty().withMessage('User Name must not be null.'),
-    body('user_email').notEmpty().withMessage('User Email must not be null.'),
+    body('user_email').isEmail().withMessage('Please provide a valid email address'),
+    body('payment_id').notEmpty().withMessage('Please try again as paymentID not generated.')
   ], async (req, res) => {
 
     const errors = validationResult(req);
@@ -29,7 +30,8 @@ router.post("/donate",
         donation_amount: req.body.donation_amount,
         donation_datetime: req.body.donation_datetime,
         user_name: req.body.user_name,
-        user_email: req.body.user_email
+        user_email: req.body.user_email,
+        payment_id:req.body.paymentMethodId
       });
 
       res.status(201).json({ message: "Donation made successfully", data: newDonation });
