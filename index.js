@@ -7,7 +7,7 @@ const initializeIDSequence = require('./initializeIDSeq')
 const registerSchemas = require('./registerSchema')
 const IOREDIS = require('ioredis')
 
-const ioredis_client = new IOREDIS("redis://default:40e9a13e3edc4bab89ad0a09fa41e524@usw2-sacred-caribou-30494.upstash.io:30494");
+const ioredis_client = new IOREDIS("redis://default:ea614b3c872244ebae7229f76f5a5915@correct-civet-35597.upstash.io:35597");
 
 // calling exports and connecting to mongodb
 const mongoDB = require('./db');

@@ -112,20 +112,20 @@ router.post('/login', validateLoginData, async (req, res) => {
 router.get("/getAllUsers", async (req, res) => {
   try {
     console.log("entered");
-    redisInstance.getRedisData('getAllUsers').then(data => {
-      console.log("entered get metho and got somethingr" , data)
-      if (data.result) {
-        console.log('Data found in Redis:', data);
-        return res.status(200).json({ source: "Redis" , message: "Fetched all Users data successfully " , data: JSON.parse(data.result)})
-      } else {
+    // redisInstance.getRedisData('getAllUsers').then(data => {
+      // console.log("entered get metho and got somethingr" , data)
+      // if (data.result) {
+      //   console.log('Data found in Redis:', data);
+      //   return res.status(200).json({ source: "Redis" , message: "Fetched all Users data successfully " , data: JSON.parse(data.result)})
+      // } else {
         // If data is not found in Redis, fetch it from the database and return it
         Users.find({}).then(databaseData => {
           // Store the data in Redis cache for future use (optional)
-          redisInstance.setRedisData('getAllUsers', JSON.stringify(databaseData));
+          // redisInstance.setRedisData('getAllUsers', JSON.stringify(databaseData));
           return res.status(200).json({ source: "Database" , message: "Fetched all Users data successfully", data: databaseData});  // Return the donations as a JSON response
         })
-      }
-    });
+      // }
+    // });
   } catch (error) {
     res.status(500).json({ message: "Error fetching users", error });
   }

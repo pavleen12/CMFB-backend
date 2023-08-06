@@ -11,6 +11,8 @@ const redisInstance = new Redis();
 router.post('/addInventory', async (req, res) => {
     try {
       const newInventoryManagement = await Inventory.create(req.body);
+
+      redisInstance.deleteKey('/getAllInventory')
       res.status(201).json({ message: "Inventory added successfully", data: newInventoryManagement});
     } catch (error) {
       res.status(500).json({ message: 'Error creating inventory management', error });

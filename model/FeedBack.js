@@ -7,10 +7,6 @@ const { Schema } = mongoose;
 
 const feedbackSchema = new Schema({
   // i guess only use either name or id
-  user_id: {
-    type: Schema.Types.ObjectId,
-    required: true
-  },
   user_name: {
     type: String,
     required: true,
@@ -22,6 +18,10 @@ const feedbackSchema = new Schema({
   feedback_date: {
     type: Date,
     required: true
+  },
+  email:{
+    type: String,
+    required:true
   }
 });
 
