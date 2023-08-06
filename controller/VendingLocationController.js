@@ -35,6 +35,7 @@ router.post(
       // Save the new vending location object to the database
       const createdVendingLocation = await newVendingLocation.save();
 
+      redisInstance.deleteKey('/allVendingLocations')
       res.status(201).json({ message: "Donation made successfully", data: createdVendingLocation });
     } catch (error) {
       console.error("Error creating vending location:", error);

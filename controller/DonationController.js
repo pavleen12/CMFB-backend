@@ -12,11 +12,11 @@ const redisInstance = new Redis();
 
 router.post("/donate",
   [
-    body('donation_amount').isNumeric().withMessage('Donation amount must be a number.'),
-    body('donation_datetime').isISO8601().withMessage('Invalid date format.'),
-    body('user_name').notEmpty().withMessage('User Name must not be null.'),
-    body('user_email').isEmail().withMessage('Please provide a valid email address'),
-    body('payment_id').notEmpty().withMessage('Please try again as paymentID not generated.')
+    body('amount').isNumeric().withMessage('Donation amount must be a number.'),
+    body('date').isISO8601().withMessage('Invalid date format.'),
+    body('username').notEmpty().withMessage('User Name must not be null.'),
+    body('email').isEmail().withMessage('Please provide a valid email address'),
+    body('paymentMethodId').notEmpty().withMessage('Please try again as paymentID not generated.')
   ], async (req, res) => {
 
     const errors = validationResult(req);
@@ -25,15 +25,16 @@ router.post("/donate",
     }
 
     try {
-
+      console.log("emtered here");
       const newDonation = await Donations.create({
-        donation_amount: req.body.donation_amount,
-        donation_datetime: req.body.donation_datetime,
-        user_name: req.body.user_name,
-        user_email: req.body.user_email,
+        donation_amount: req.body.amount,
+        donation_datetime: req.body.date,
+        user_name: req.body.username,
+        user_email: req.body.email,
         payment_id:req.body.paymentMethodId
       });
 
+      redisInstance.deleteKey('/getAllDonations')
       res.status(201).json({ message: "Donation made successfully", data: newDonation });
     } catch (error) {
       res.status(500).json({ message: "Internal server error" , error: error });

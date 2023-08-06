@@ -3,9 +3,16 @@ const router = express.Router();
 const axios = require("axios");
 const ioredis_client = require("./index");
 
-const upstashURL = "https://usw2-sacred-caribou-30494.upstash.io";
+const upstashURL = "https://correct-civet-35597.upstash.io";
 const apiKey =
-  "AnceACQgZmM2NmEyZTctMGI3ZS00YWQ2LTk3ZjYtYmI5NjJlYzRkN2EwqlhHQr1j6hOcXxOrSp6RA1s5XfXy7m71JxCnSKaL2Bo=";
+  "AYsNACQgOTZhM2Y3YzAtNTkzNS00OWI0LTk0MjgtOGYyZWI5YWFhOWI0ZWE2MTRiM2M4NzIyNDRlYmFlNzIyOWY3NmY1YTU5MTU=";
+
+  const expiresToSeconds = (expires) => {
+    now : new Date();
+    expiresDate = new Date(expires);
+    secondsDelta = expiresDate.getSeconds() - now.getSeconds();
+    return secondsDelta < 0 ? 0 : secondsDelta;
+  };
 
 class Redis {
   getRedisData = async (key) => {
@@ -13,7 +20,7 @@ class Redis {
       .get(`${upstashURL}/get/${key}`, {
         headers: {
           Authorization:
-            "Bearer AnceACQgZmM2NmEyZTctMGI3ZS00YWQ2LTk3ZjYtYmI5NjJlYzRkN2EwqlhHQr1j6hOcXxOrSp6RA1s5XfXy7m71JxCnSKaL2Bo=",
+            "Bearer AosNACQgOTZhM2Y3YzAtNTkzNS00OWI0LTk0MjgtOGYyZWI5YWFhOWI0Lc4H2xpQwO__Psj8Sj7OjDyDmAzayq1WV7umI0H2LpI=",
         },
       })
       .then((response) => 
@@ -22,24 +29,41 @@ class Redis {
     })
   };
 
-  setRedisData = (key, data) => {
+  setRedisData = async (key, data) => {
     // return
-    axios
+    //${data}
+    await axios
       .get(`${upstashURL}/set/${key}/${data}`, {
         headers: {
           Authorization:
-            "Bearer AXceACQgZmM2NmEyZTctMGI3ZS00YWQ2LTk3ZjYtYmI5NjJlYzRkN2EwNDBlOWExM2UzZWRjNGJhYjg5YWQwYTA5ZmE0MWU1MjQ=",
+            "Bearer AYsNACQgOTZhM2Y3YzAtNTkzNS00OWI0LTk0MjgtOGYyZWI5YWFhOWI0ZWE2MTRiM2M4NzIyNDRlYmFlNzIyOWY3NmY1YTU5MTU=",
         },
       })
       .then((response) => 
       {
-        
+        console.log(response.data + "in then");
         return response.data
     })
       .then((data) => {
+        console.log(data + "in 2nd then");
         return data;
       });
   };
+
+  deleteKey = (key) => {
+    axios.get(`${upstashURL}/del/${key}`, {
+      // method: "post",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+      },
+    })
+      .then(response => {
+        console.log('Data deleted successfully:', response.data);
+      })
+      .catch(error => {
+        console.error('Error deleting data:', error);
+      });
+  }
 }
 
 module.exports = Redis;

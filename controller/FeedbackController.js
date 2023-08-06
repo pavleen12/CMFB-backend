@@ -10,7 +10,7 @@ const redisInstance = new Redis();
 // Feedback CRUD operations
 router.post("/feedBack",
   [
-    body('user_id').notEmpty().withMessage('User ID must be a number.'),
+    body('email').isEmail().withMessage('User ID must be a number.'),
     body('user_name').notEmpty().withMessage('User name is required.'),
     body('feedback_message').notEmpty().withMessage('Feedback message is required.'),
     body('feedback_date').isISO8601().withMessage('Invalid date format.'),
@@ -18,14 +18,19 @@ router.post("/feedBack",
   
   try {
 
+    const today = new Date();
+    const currentDate = today.toISOString().split('T')[0];
+    console.log(currentDate);
+
   
     const newFeedback = await FeedBack.create({
       feedback_message: req.body.feedback_message,
       feedback_date: req.body.feedback_date,
       user_name: req.body.user_name,
-      user_id: req.body.user_id,
+      email: req.body.email
     });;
 
+    redisInstance.deleteKey('/getAllFeedBacks')
     res.status(201).json({ message: "Feedback made successfully", data:  newFeedback});
 } catch (error) {
   console.error(error);
@@ -78,7 +83,7 @@ try {
 // Route to update a feedback
 router.put('/feedback/:id',
 [
-  body('user_id').notEmpty().withMessage('User ID must be a number.'),
+  body('email').notEmpty().withMessage('User Email must be a number.'),
   body('user_name').notEmpty().withMessage('User name is required.'),
   body('feedback_message').notEmpty().withMessage('Feedback message is required.'),
   body('feedback_date').isISO8601().withMessage('Invalid date format.'),

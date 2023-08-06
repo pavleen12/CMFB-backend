@@ -29,6 +29,7 @@ router.post("/foodbank",
       helpline: req.body.helpline,
     });
 
+    redisInstance.deleteKey('/getAllFoodBanks')
     res.status(201).json({ message: "FoodBank created successfully", data: newFoodBank });
 } catch (error) {
   console.error(error);
